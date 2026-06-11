@@ -754,17 +754,28 @@ function Customers({ dark }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [errors, setErrors] = useState({ name: "", email: "" });
 
   const filtered = list.filter(c => c.name.toLowerCase().includes(search.toLowerCase()) || c.email.toLowerCase().includes(search.toLowerCase()));
 
+  const validateEmail = (e) => {
+    return /\S+@\S+\.\S+/.test(e);
+  };
+
   const handleCreate = () => {
-    if (!name.trim() || !email.trim()) return;
+    const nextErrors = { name: "", email: "" };
+    if (!name.trim()) nextErrors.name = "Name is required";
+    if (!email.trim()) nextErrors.email = "Email is required";
+    else if (!validateEmail(email.trim())) nextErrors.email = "Enter a valid email";
+    setErrors(nextErrors);
+    if (nextErrors.name || nextErrors.email) return;
     const id = list.length ? Math.max(...list.map(c => c.id)) + 1 : 1;
     const joinDate = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
     const newCustomer = { id, name: name.trim(), email: email.trim(), phone: phone.trim(), joinDate, totalSpent: 0, orders: 0, points: 0, tier: "Bronze" };
     setList(prev => [newCustomer, ...prev]);
     setAddOpen(false);
     setName(""); setEmail(""); setPhone("");
+    setErrors({ name: "", email: "" });
   };
 
   return (
@@ -854,9 +865,11 @@ function Customers({ dark }) {
 
       {/* Add Customer Modal */}
       <Modal open={addOpen} onClose={() => setAddOpen(false)} title="Add New Customer">
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2">
           <Input label="Full Name" placeholder="Jane Doe" value={name} onChange={e => setName(e.target.value)} />
+          {errors.name && <p className="text-xs text-red-500">{errors.name}</p>}
           <Input label="Email Address" placeholder="jane@company.com" type="email" value={email} onChange={e => setEmail(e.target.value)} />
+          {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
           <Input label="Phone" placeholder="+234 800 000 0000" value={phone} onChange={e => setPhone(e.target.value)} />
         </div>
         <div className="flex justify-end gap-2 mt-6">
